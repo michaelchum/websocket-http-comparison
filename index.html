@@ -1,21 +1,76 @@
-<input id="file" type="file" />
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
-<form id="http" action="http://localhost:8000/upload" enctype="multipart/form-data" method="post">
-<input type="text" name="title"><br>
-<input type="file" name="upload" ><br>
-<input type="submit" value="Upload">
-</form>
+    <!-- Import CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.css">
+  </head>
 
-<script src="js/socket.io.js"></script>
-<script src="js/socket.io-stream.js"></script>
-<script src="js/jquery.js"></script>
+  <body>
+    <div class="container theme-showcase" role="main">
+      <div class="jumbotron">
+        <h1>WebSocket vs RESTful HTTP</h1>
+        <p>A benchmark comparison of the file transfer speed between the same client and server but using two different protocols, WebSocket and regular RESTful HTTP.</p>
+      </div> <!-- End of jumbotron -->
+
+      <h2>Choose a file</h2>
+      <form id="file-send" action="/upload" enctype="multipart/form-data" method="post">
+        <input id="file" type="file" name="upload"/>
+        <br>
+        <button id="ws-send" type="button" class="btn btn-primary" data-trigger="focus" title="No file selected" data-content="Please select a file">Send with WebSocket</button>
+        <input id="http-send" type="submit" value="Send with HTTP" class="btn btn-warning" data-trigger="focus" title="No file selected" data-content="Please select a file"/>
+      </form>
+
+      <br>
+
+      <h2><span class="label label-primary col-md-3">WebSocket</span><span class="col-md-2"></span><span id="ws-time" class="label label-info col-md-2">0ms</span><span class="col-md-5"></span><br></h2>
+
+      <div class="progress">
+        <div id="ws-progress" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+          0%
+          <span class="sr-only">0% Complete</span>
+        </div>
+      </div>
+
+
+      <h2><span class="label label-warning col-md-3">HTTP</span><span class="col-md-2"></span><span id="http-time" class="label label-info col-md-2">0ms</span><span class="col-md-5"></span><br></h2>
+
+      <div class="progress">
+        <div id="http-progress" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+          0%
+          <span class="sr-only">0% Complete</span>
+        </div>
+      </div>
+
+    </div> <!-- End of container -->
+
+    <!-- Import JavaScript -->
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/socket.io.js"></script>
+    <script src="js/socket.io-stream.js"></script>
+  </body>
+</html>
 
 <script>
 $(function() {
-  var socket = io.connect('http://localhost:8000');
+  var socket = io.connect('/');
 
-  $('#file').change(function (e) {
-    var file = e.target.files[0];
+  $('#ws-send').click(function () {
+    var file = $('#file')[0].files[0];
+    if (file === undefined) {
+      $('#ws-send').popover('show');
+      return;
+    } else {
+      $('#ws-send').popover('hide');
+    }
     var stream = ss.createStream();
 
     // upload a file to the server.
@@ -25,13 +80,18 @@ $(function() {
     var size = 0;
     var start = new Date().getTime();
     var finish = undefined;
+    var interval = undefined;
     blobStream.on('data', function(chunk) {
       size += chunk.length;
-      console.log(Math.floor(size / file.size * 100));
-      if (Math.floor(size / file.size)==1) finish = new Date().getTime();;
-      if (start && finish) {
-        var time = finish - start;
-        console.log(time);
+      var progress = Math.floor(size / file.size * 100);
+      console.log(progress);
+      $('#ws-progress').text(progress + '%');
+      $('#ws-progress').css('width', progress + '%').attr('aria-valuenow', progress); 
+      finish = new Date().getTime();
+      interval = finish - start;
+      $('#ws-time').text(interval + 'ms');
+      if (progress == 100) {
+        $('#ws-time').removeClass('label-info').addClass('label-success');
       }
     });
     blobStream.pipe(stream);
@@ -41,9 +101,20 @@ $(function() {
     console.log('WebSocket connected');
   });
 
-  $('#http').submit( function( e ) {
+  socket.on('update-http-progress', function (data) {
+    var progress = data.progress;
+    var interval = data.interval;
+    $('#http-progress').text(progress + '%');
+    $('#http-progress').css('width', progress + '%').attr('aria-valuenow', progress); 
+    $('#http-time').text(interval + 'ms');
+    if (progress == 100) {
+      $('#http-time').removeClass('label-info').addClass('label-success');
+    }
+  });
+
+  $('#file-send').submit( function( e ) {
     $.ajax( {
-      url: 'http://localhost:8000/upload',
+      url: '/upload',
       type: 'POST',
       data: new FormData(this),
       processData: false,
