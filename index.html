@@ -82,13 +82,13 @@ $(function() {
     var finish = undefined;
     var interval = undefined;
     blobStream.on('data', function(chunk) {
+      finish = new Date().getTime();
+      interval = finish - start;
       size += chunk.length;
       var progress = Math.floor(size / file.size * 100);
       console.log(progress);
       $('#ws-progress').text(progress + '%');
       $('#ws-progress').css('width', progress + '%').attr('aria-valuenow', progress); 
-      finish = new Date().getTime();
-      interval = finish - start;
       $('#ws-time').text(interval + 'ms');
       if (progress == 100) {
         $('#ws-time').removeClass('label-info').addClass('label-success');

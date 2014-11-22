@@ -58,15 +58,14 @@ app.post('/upload', function (req, res) {
     res.end();
   });
   var start = new Date().getTime();
-  var finish = new Date().getTime();
-  var interval = finish - start;
+  var finish = undefined;
+  var interval = undefined;
   form.on('progress', function(bytesReceived, bytesExpected) {
     var progress = Math.floor((bytesReceived / bytesExpected)*100);
     console.log(progress);
     finish = new Date().getTime();
     interval = finish - start;
-    var response = {'progress':progress,'interval':interval,'finished':false};
-    if (Math.floor(bytesReceived / bytesExpected)==1) response['finished'] = true;
+    var response = {'progress':progress,'interval':interval};
     io.sockets.emit('update-http-progress', response);
   });
 })
