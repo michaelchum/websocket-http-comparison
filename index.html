@@ -86,16 +86,19 @@ $(function() {
       interval = finish - start;
       size += chunk.length;
       var progress = Math.floor(size / file.size * 100);
-      console.log(progress);
-      $('#ws-progress').text(progress + '%');
-      $('#ws-progress').css('width', progress + '%').attr('aria-valuenow', progress); 
-      $('#ws-time').text(interval + 'ms');
-      if (progress == 100) {
-        $('#ws-time').removeClass('label-info').addClass('label-success');
-      }
+      updateWS(progress, interval);
+  
     });
     blobStream.pipe(stream);
   });
+
+  function updateWS(progress, interval) {
+    console.log(progress);
+    $('#ws-progress').text(progress + '%');
+    $('#ws-progress').css('width', progress + '%').attr('aria-valuenow', progress); 
+    $('#ws-time').text(interval + 'ms');
+    if (progress == 100) $('#ws-time').removeClass('label-info').addClass('label-success');
+  }
 
   socket.on('connect', function (data) {
     console.log('WebSocket connected');
