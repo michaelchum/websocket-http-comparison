@@ -1,0 +1,56 @@
+<input id="file" type="file" />
+
+<form id="http" action="http://localhost:8000/upload" enctype="multipart/form-data" method="post">
+<input type="text" name="title"><br>
+<input type="file" name="upload" ><br>
+<input type="submit" value="Upload">
+</form>
+
+<script src="js/socket.io.js"></script>
+<script src="js/socket.io-stream.js"></script>
+<script src="js/jquery.js"></script>
+
+<script>
+$(function() {
+  var socket = io.connect('http://localhost:8000');
+
+  $('#file').change(function (e) {
+    var file = e.target.files[0];
+    var stream = ss.createStream();
+
+    // upload a file to the server.
+    var filename = $('#file').val();
+    ss(socket).emit('ws-upload', stream, {size: file.size, name: filename});
+    var blobStream = ss.createBlobReadStream(file);
+    var size = 0;
+    var start = new Date().getTime();
+    var finish = undefined;
+    blobStream.on('data', function(chunk) {
+      size += chunk.length;
+      console.log(Math.floor(size / file.size * 100));
+      if (Math.floor(size / file.size)==1) finish = new Date().getTime();;
+      if (start && finish) {
+        var time = finish - start;
+        console.log(time);
+      }
+    });
+    blobStream.pipe(stream);
+  });
+
+  socket.on('connect', function (data) {
+    console.log('WebSocket connected');
+  });
+
+  $('#http').submit( function( e ) {
+    $.ajax( {
+      url: 'http://localhost:8000/upload',
+      type: 'POST',
+      data: new FormData(this),
+      processData: false,
+      contentType: false
+    });
+    e.preventDefault();
+  });
+
+});
+</script>
