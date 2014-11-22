@@ -38,26 +38,6 @@ io.on('connection', function (socket) {
     var filename = path.basename(data.name);
     stream.pipe(fs.createWriteStream(filename));
   });
-  app.post('/upload', function (req, res) {
-    var form = new multiparty.Form();
-    form.parse(req, function(err, fields, files) {
-      res.writeHead(200, {'content-type': 'text/plain'});
-      res.write('Received Upload');
-      res.end();
-    });
-    var start = new Date().getTime();
-    var finish = new Date().getTime();
-    var interval = finish - start;
-    form.on('progress', function(bytesReceived, bytesExpected) {
-      var progress = Math.floor((bytesReceived / bytesExpected)*100);
-      console.log(progress);
-      finish = new Date().getTime();
-      interval = finish - start;
-      var response = {'progress':progress,'interval':interval,'finished':false};
-      if (Math.floor(bytesReceived / bytesExpected)==1) response['finished'] = true;
-      socket.emit('update-http-progress', response);
-    });
-  })
 });
 
 // Hosting the client monitor
@@ -69,3 +49,24 @@ app.get('/', function (req, res) {
 
 app.use('/js', express.static(__dirname + '/js'));
 app.use('/css', express.static(__dirname + '/css'));
+
+app.post('/upload', function (req, res) {
+  var form = new multiparty.Form();
+  form.parse(req, function(err, fields, files) {
+    res.writeHead(200, {'content-type': 'text/plain'});
+    res.write('Received Upload');
+    res.end();
+  });
+  var start = new Date().getTime();
+  var finish = new Date().getTime();
+  var interval = finish - start;
+  form.on('progress', function(bytesReceived, bytesExpected) {
+    var progress = Math.floor((bytesReceived / bytesExpected)*100);
+    console.log(progress);
+    finish = new Date().getTime();
+    interval = finish - start;
+    var response = {'progress':progress,'interval':interval,'finished':false};
+    if (Math.floor(bytesReceived / bytesExpected)==1) response['finished'] = true;
+    io.sockets.emit('update-http-progress', response);
+  });
+})
