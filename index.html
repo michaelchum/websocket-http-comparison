@@ -101,9 +101,13 @@ $(function() {
     console.log('WebSocket connected');
   });
 
+  var start = undefined;
+  var finish = undefined;
+  var interval = undefined;
   socket.on('update-http-progress', function (data) {
     var progress = data.progress;
-    var interval = data.interval;
+    finish = new Date().getTime();
+    interval = finish - start;
     $('#http-progress').text(progress + '%');
     $('#http-progress').css('width', progress + '%').attr('aria-valuenow', progress); 
     $('#http-time').text(interval + 'ms');
@@ -113,6 +117,7 @@ $(function() {
   });
 
   $('#file-send').submit( function( e ) {
+    start = new Date().getTime();
     $.ajax( {
       url: '/upload',
       type: 'POST',
