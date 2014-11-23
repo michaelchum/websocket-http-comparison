@@ -57,15 +57,10 @@ app.post('/upload', function (req, res) {
     res.write('Received Upload');
     res.end();
   });
-  var start = new Date().getTime();
-  var finish = undefined;
-  var interval = undefined;
   form.on('progress', function(bytesReceived, bytesExpected) {
     var progress = Math.floor((bytesReceived / bytesExpected)*100);
     console.log(progress);
-    finish = new Date().getTime();
-    interval = finish - start;
-    var response = {'progress':progress,'interval':interval};
+    var response = {'progress':progress};
     io.sockets.emit('update-http-progress', response);
   });
 })

@@ -17,7 +17,7 @@
     <div class="container theme-showcase" role="main">
       <div class="jumbotron">
         <h1>WebSocket vs RESTful HTTP</h1>
-        <p>A benchmark comparison of the file transfer speed between the same client and server but using two different protocols, WebSocket and regular RESTful HTTP.</p>
+        <p>A benchmark comparison of the file transfer speed between the same client and server but using two different protocols, <b>WebSocket streaming</b> and a regular <b>HTTP POST request</b>.</p>
       </div> <!-- End of jumbotron -->
 
       <h2>Choose a file</h2>
@@ -104,9 +104,13 @@ $(function() {
     console.log('WebSocket connected');
   });
 
+  var start = undefined;
+  var finish = undefined;
+  var interval = undefined;
   socket.on('update-http-progress', function (data) {
     var progress = data.progress;
-    var interval = data.interval;
+    finish = new Date().getTime();
+    interval = finish - start;
     $('#http-progress').text(progress + '%');
     $('#http-progress').css('width', progress + '%').attr('aria-valuenow', progress); 
     $('#http-time').text(interval + 'ms');
@@ -116,6 +120,7 @@ $(function() {
   });
 
   $('#file-send').submit( function( e ) {
+    start = new Date().getTime();
     $.ajax( {
       url: '/upload',
       type: 'POST',
