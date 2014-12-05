@@ -1,7 +1,6 @@
 {
-  "name": "server",
+  "name": "websocket-http-comparison",
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
   "dependencies": {
     "cors": "^2.5.2",
@@ -21,5 +20,13 @@
     "start": "node server.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michaelchum/websocket-http-comparison"
+  },
+  "bugs": {
+    "url": "https://github.com/michaelchum/websocket-http-comparison/issues"
+  },
+  "homepage": "https://github.com/michaelchum/websocket-http-comparison"
 }
